@@ -73,7 +73,11 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 // === MIDDLEWARE ===
 
 // Security middleware
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(compression());
 
 // CORS configuration
@@ -102,7 +106,25 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(
+  '/uploads',
+  (_req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  express.static(path.join(__dirname, '../uploads'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.webm') || filePath.endsWith('.bin')) {
+        res.setHeader('Content-Type', 'video/webm');
+      } else if (filePath.endsWith('.mp4')) {
+        res.setHeader('Content-Type', 'video/mp4');
+      } else if (filePath.endsWith('.mp3')) {
+        res.setHeader('Content-Type', 'audio/mpeg');
+      }
+    },
+  })
+);
 
 // === API DOCUMENTATION ===
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -81,13 +81,16 @@ export class StorageService {
     const extensions: Record<string, string> = {
       'audio/mpeg': 'mp3',
       'audio/wav': 'wav',
+      'audio/webm': 'webm',
       'video/mp4': 'mp4',
       'video/webm': 'webm',
       'image/jpeg': 'jpg',
       'image/png': 'png',
     };
 
-    return extensions[fileType] || 'bin';
+    if (extensions[fileType]) return extensions[fileType];
+    if (fileType.includes('audio')) return 'mp3';
+    return 'webm';
   }
 
   async generateFileHash(buffer: Buffer): Promise<string> {
