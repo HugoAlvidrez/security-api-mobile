@@ -12,10 +12,13 @@ const upload = multer({
     const allowedTypes = [
       'audio/mpeg',
       'audio/wav',
+      'audio/webm',
+      'audio/mp3',
       'video/mp4',
       'video/webm',
+      'application/octet-stream',
     ];
-    if (allowedTypes.includes(file.mimetype)) {
+    if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(mp4|webm|wav|mp3|bin)$/i)) {
       cb(null, true);
     } else {
       cb(new Error('Invalid file type'));

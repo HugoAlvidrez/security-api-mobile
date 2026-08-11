@@ -312,10 +312,20 @@ class MemoryStore {
     }
 
     if (/UPDATE "emergency_events"/i.test(cleanStr)) {
-      const eventId = params[params.length - 2];
+      const eventId = params[params.length - 1];
       const ev = this.emergency_events.find((e) => e.id === eventId);
       if (ev) {
-        if (params[0]) ev.status = params[0];
+        if (cleanStr.includes('videoUrl')) {
+          ev.videoUrl = params[0];
+          ev.videoHash = params[1];
+          ev.tieneVideo = true;
+        } else if (cleanStr.includes('audioUrl')) {
+          ev.audioUrl = params[0];
+          ev.audioHash = params[1];
+          ev.tieneAudio = true;
+        } else if (params[0]) {
+          ev.status = params[0];
+        }
         ev.updatedAt = new Date();
         return { rows: [ev], rowCount: 1 };
       }
