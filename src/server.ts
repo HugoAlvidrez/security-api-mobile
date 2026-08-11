@@ -79,11 +79,12 @@ app.use(compression());
 // CORS configuration
 app.use(
   cors({
-    origin: ENV.CORS.ORIGIN,
+    origin: true,
     credentials: true,
     optionsSuccessStatus: 200,
   })
 );
+
 
 // Rate limiting
 const limiter = rateLimit({
