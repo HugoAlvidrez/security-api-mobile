@@ -69,22 +69,29 @@ export class EventController {
       const validated = paginationValidator.parse(req.query);
       const skip = (validated.page - 1) * validated.limit;
 
+      const isOperatorOrAdmin = req.user.role === 'operador' || req.user.role === 'super_admin';
+
       const client = await pool.connect();
 
       try {
         // Get total count
-        const countResult = await client.query(
-          'SELECT COUNT(*) FROM "emergency_events" WHERE "userId" = $1',
-          [req.user.userId]
-        );
-        const total = parseInt(countResult.rows[0].count);
+        const countQuery = isOperatorOrAdmin
+          ? 'SELECT COUNT(*) FROM "emergency_events"'
+          : 'SELECT COUNT(*) FROM "emergency_events" WHERE "userId" = $1';
+        const countParams = isOperatorOrAdmin ? [] : [req.user.userId];
+
+        const countResult = await client.query(countQuery, countParams);
+        const total = parseInt(countResult.rows[0]?.count || '0');
 
         // Get paginated events
-        const eventsResult = await client.query(
-          `SELECT * FROM "emergency_events" WHERE "userId" = $1 
-           ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`,
-          [req.user.userId, validated.limit, skip]
-        );
+        const eventsQuery = isOperatorOrAdmin
+          ? `SELECT * FROM "emergency_events" ORDER BY "createdAt" DESC LIMIT $1 OFFSET $2`
+          : `SELECT * FROM "emergency_events" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT $2 OFFSET $3`;
+        const eventsParams = isOperatorOrAdmin
+          ? [validated.limit, skip]
+          : [req.user.userId, validated.limit, skip];
+
+        const eventsResult = await client.query(eventsQuery, eventsParams);
 
         const response: ApiResponse = {
           success: true,
